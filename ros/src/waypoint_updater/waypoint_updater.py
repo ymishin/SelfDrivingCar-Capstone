@@ -70,7 +70,7 @@ class WaypointUpdater(object):
         vec2 = np.array(prev_coord)
         vec3 = np.array([x, y])
 
-        # check hyperplane and get next waypoint if both closest_coord and prev_coord are behind the car 
+        # Check hyperplane and get next waypoint if both closest_coord and prev_coord are behind the car 
         if np.dot(vec1 - vec2, vec3 - vec1) > 0:
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
         return closest_idx

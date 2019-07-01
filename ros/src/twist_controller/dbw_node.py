@@ -80,7 +80,7 @@ class DBWNode(object):
         # Spin until shutdown
         rate = rospy.Rate(50) # 50Hz
         while not rospy.is_shutdown():
-            # TODO: Get predicted throttle, brake, and steering using `twist_controller`
+            # Get predicted throttle, brake and steering
             throttle = brake = steering = 0.
             if not None in (self.current_vel, self.linear_vel, self.angular_vel):
                 throttle, brake, steering = self.controller.control(
@@ -88,7 +88,7 @@ class DBWNode(object):
                         self.current_vel,
                         self.linear_vel,
                         self.angular_vel)
-            # You should only publish the control commands if dbw is enabled
+            # Publish if dbw is enabled
             if self.dbw_enabled:
                 self.publish(throttle, brake, steering)
             rate.sleep()
