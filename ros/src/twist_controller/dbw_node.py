@@ -15,6 +15,8 @@ You will subscribe to `/twist_cmd` message which provides the proposed linear an
 You can subscribe to any other message that you find important or refer to the document for list
 of messages subscribed to by the reference implementation of this node.
 
+
+
 One thing to keep in mind while building this node and the `twist_controller` class is the status
 of `dbw_enabled`. While in the simulator, its enabled all the time, in the real car, that will
 not be the case. This may cause your PID controller to accumulate error because the car could
@@ -46,35 +48,69 @@ class DBWNode(object):
         max_lat_accel = rospy.get_param('~max_lat_accel', 3.)
         max_steer_angle = rospy.get_param('~max_steer_angle', 8.)
 
-        self.steer_pub = rospy.Publisher('/vehicle/steering_cmd',
-                                         SteeringCmd, queue_size=1)
-        self.throttle_pub = rospy.Publisher('/vehicle/throttle_cmd',
-                                            ThrottleCmd, queue_size=1)
-        self.brake_pub = rospy.Publisher('/vehicle/brake_cmd',
-                                         BrakeCmd, queue_size=1)
+        # Create Controller
+        self.controller = Controller(
+                vehicle_mass,
+                fuel_capacity,
+                brake_deadband,
+                decel_limit,
+                accel_limit,
+                wheel_radius,
+                wheel_base,
+                steer_ratio,
+                max_lat_accel,
+                max_steer_angle)
 
-        # TODO: Create `Controller` object
-        # self.controller = Controller(<Arguments you wish to provide>)
+        self.current_vel = None
+        self.linear_vel = None
+        self.angular_vel = None
+        
+        self.current_angular_vel = None
+        self.dbw_enabled = None
+       
+        self.throttle = 0   # 0 - 1
+        self.brake = 0      # torque 
+        selt.steering = 0
 
-        # TODO: Subscribe to all the topics you need to
+        # Publishers
+        self.steer_pub = rospy.Publisher('/vehicle/steering_cmd', SteeringCmd, queue_size=1)
+        self.throttle_pub = rospy.Publisher('/vehicle/throttle_cmd', ThrottleCmd, queue_size=1)
+        self.brake_pub = rospy.Publisher('/vehicle/brake_cmd', BrakeCmd, queue_size=1)
 
-        self.loop()
+        # Subscribers
+        rospy.Subscriber('/current_velocity', TwistStamped, self.velocity_cb)
+        rospy.Subscriber('/twist_cmd', TwistStamped, self.twist_cb)
+        rospy.Subscriber('/vehicle/dbw_enabled', Bool, self.dbw_enabled_cb)
 
-    def loop(self):
+        # Spin until shutdown
         rate = rospy.Rate(50) # 50Hz
         while not rospy.is_shutdown():
             # TODO: Get predicted throttle, brake, and steering using `twist_controller`
+            if not None in (self.current_vel, self.linear_vel, self.angular_vel)
+                self.throttle, self.brake, self.steering = self.controller.control(
+                        self.dbw_enabled,
+                        self.current_vel,
+                        self.linear_vel,
+                        self.angular_vel)
             # You should only publish the control commands if dbw is enabled
-            # throttle, brake, steering = self.controller.control(<proposed linear velocity>,
-            #                                                     <proposed angular velocity>,
-            #                                                     <current linear velocity>,
-            #                                                     <dbw status>,
-            #                                                     <any other argument you need>)
-            # if <dbw is enabled>:
-            #   self.publish(throttle, brake, steer)
+            if self.dbw_enabled:
+                self.publish(self.throttle, self.brake, self.steering)
             rate.sleep()
+    
+    def velocity_cb(self, msg):
+        self.current_vel = msg.twist.linear.x
+        pass
 
-    def publish(self, throttle, brake, steer):
+    def twist_cb(self, msg):
+        self.linear_vel = msg.twist.linear.x
+        self.angular_vel = msg.twist.angular.z
+        pass
+
+    def dbw_enabled_cb(self, msg):
+        self.dbw_enabled = msg
+        pass
+
+    def publish(self, throttle, brake, steering):
         tcmd = ThrottleCmd()
         tcmd.enable = True
         tcmd.pedal_cmd_type = ThrottleCmd.CMD_PERCENT
@@ -83,7 +119,7 @@ class DBWNode(object):
 
         scmd = SteeringCmd()
         scmd.enable = True
-        scmd.steering_wheel_angle_cmd = steer
+        scmd.steering_wheel_angle_cmd = steering
         self.steer_pub.publish(scmd)
 
         bcmd = BrakeCmd()
@@ -91,7 +127,7 @@ class DBWNode(object):
         bcmd.pedal_cmd_type = BrakeCmd.CMD_TORQUE
         bcmd.pedal_cmd = brake
         self.brake_pub.publish(bcmd)
-
+        pass
 
 if __name__ == '__main__':
     DBWNode()
