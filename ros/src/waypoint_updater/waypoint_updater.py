@@ -40,6 +40,7 @@ class WaypointUpdater(object):
         self.base_waypoints = None
         self.waypoints_2d = None
         self.waypoints_tree = None
+        self.stopline_wp_idx = -1
         
         # Publishers
         self.final_waypoints_pub = rospy.Publisher('/final_waypoints', Lane, queue_size=1)
