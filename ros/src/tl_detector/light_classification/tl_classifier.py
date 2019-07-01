@@ -4,9 +4,6 @@ import cv2
 
 class TLClassifier(object):
     def __init__(self):
-        #TODO load classifier
-        self.red_detected = 0
-        self.treshold = 5
         pass
 
     def get_classification(self, image):
@@ -38,21 +35,9 @@ class TLClassifier(object):
         #red_hue_image = cv2.GaussianBlur(red_hue_image, (9, 9));
 
         # Apply Circle Hough Transform to detect circles
-        circles = cv2.HoughCircles(red_hue_image, cv2.HOUGH_GRADIENT, 1, 30,
-                100, 20, 5, 50)
+        circles = cv2.HoughCircles(red_hue_image, cv2.HOUGH_GRADIENT, 1, 30, 100, 20, 5, 50)
 
         if circles.size > 0:
-            # detected !!!
-
-        if red:
-            self.red_detected = self.red_detected + 1
+            return TrafficLight.RED
         else:
-            self.red_detected = 0
-
-        if self.red_detected > self.treshold:
-            return True
-
-
-        #TODO implement light color prediction
-        return TrafficLight.UNKNOWN
-        return TrafficLight.RED
+            return TrafficLight.UNKNOWN
