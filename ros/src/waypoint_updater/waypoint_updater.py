@@ -28,6 +28,11 @@ class WaypointUpdater(object):
     def __init__(self):
         rospy.init_node('waypoint_updater')
 
+        self.pose = None
+        self.base_waypoints = None
+        self.waypoints_2d = None
+        self.waypoints_tree = None
+        
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
@@ -36,11 +41,6 @@ class WaypointUpdater(object):
         #rospy.Subscriber('/obstacle_waypoint', , self.)
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
-
-        #self.pose = None
-        #self.base_waypoints = None
-        #self.waypoints_2d = None
-        #self.waypoints_tree = None
 
         rate = rospy.Rate(35)
 
@@ -78,10 +78,10 @@ class WaypointUpdater(object):
 
     def waypoints_cb(self, waypoints):
         # Called only once
-        self.base_waypoints = waypoints
-        #if not self.waypoints_2d:
-        self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
-        self.waypoints_tree = KDTree(self.waypoints_2d)
+        if not self.base_waypoints:
+            self.base_waypoints = waypoints
+            self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+            self.waypoints_tree = KDTree(self.waypoints_2d)
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
