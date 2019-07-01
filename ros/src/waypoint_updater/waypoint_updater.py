@@ -8,12 +8,18 @@ import numpy as np
 import math
 
 '''
-This node will publish waypoints from the car's current position to some `x` distance ahead.
+This node publishes waypoints from the car's current position to some `x` distance ahead.
+
+
+
 
 As mentioned in the doc, you should ideally first implement a version which does not care
 about traffic lights or obstacles.
 
 Once you have created dbw_node, you will update this node to use the status of traffic lights too.
+
+
+
 
 Please note that our simulator also provides the exact location of traffic lights and their
 current status in `/vehicle/traffic_lights` message. You can use this message to build this node
@@ -22,8 +28,7 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
-
+LOOKAHEAD_WPS = 30 # Number of waypoints to publish
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -34,22 +39,24 @@ class WaypointUpdater(object):
         self.waypoints_2d = None
         self.waypoints_tree = None
         
+        # Publishers
+        self.final_waypoints_pub = rospy.Publisher('/final_waypoints', Lane, queue_size=1)
+
+        # Subscribers
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-
         # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
         #rospy.Subscriber('/traffic_waypoint', , self.)
         #rospy.Subscriber('/obstacle_waypoint', , self.)
 
-        self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
-
-        rate = rospy.Rate(35)
-
+        # Spin until shutdown
+        rate = rospy.Rate(50) # 50Hz
         while not rospy.is_shutdown():
-            if self.pose and self.waypoints_tree:
+            if not None in (self.pose, self.waypoints_tree)
                 closest_waypoint_idx = self.get_closest_waypoint_idx()
                 self.publish_waypoints(closest_waypoint_idx)
             rate.sleep()
+        pass
             
     def get_closest_waypoint_idx(self):
         x = self.pose.pose.position.x
@@ -73,9 +80,11 @@ class WaypointUpdater(object):
         lane.header = self.base_waypoints.header
         lane.waypoints = self.base_waypoints.waypoints[closest_waypoint_idx:closest_waypoint_idx + LOOKAHEAD_WPS]
         self.final_waypoints_pub.publish(lane)
+        pass
 
     def pose_cb(self, msg):
         self.pose = msg
+        pass
 
     def waypoints_cb(self, waypoints):
         # Called only once
@@ -83,6 +92,7 @@ class WaypointUpdater(object):
             self.base_waypoints = waypoints
             self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
             self.waypoints_tree = KDTree(self.waypoints_2d)
+        pass
 
     def traffic_cb(self, msg):
         # TODO: Callback for /traffic_waypoint message. Implement
@@ -97,6 +107,7 @@ class WaypointUpdater(object):
 
     def set_waypoint_velocity(self, waypoints, waypoint, velocity):
         waypoints[waypoint].twist.twist.linear.x = velocity
+        pass
 
     def distance(self, waypoints, wp1, wp2):
         dist = 0
@@ -105,7 +116,6 @@ class WaypointUpdater(object):
             dist += dl(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
             wp1 = i
         return dist
-
 
 if __name__ == '__main__':
     try:

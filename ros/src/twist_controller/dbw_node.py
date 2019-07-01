@@ -63,8 +63,7 @@ class DBWNode(object):
 
         self.current_vel = None
         self.linear_vel = None
-        self.angular_vel = None
-        
+        self.angular_vel = None 
         self.current_angular_vel = None
         self.dbw_enabled = None
        

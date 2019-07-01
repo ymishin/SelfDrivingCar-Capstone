@@ -17,11 +17,11 @@ class Controller(object):
                 min_speed, max_lat_accel, max_steer_angle)
 
         # Throttle controller
-        kp = 0.3
-        ki = 0.1
-        kd = 0.0
+        kp = 1.0
+        ki = 0.0002
+        kd = 0.1
         min_throttle = 0.0
-        max_throttle = 0.2
+        max_throttle = 1.0
         self.throttle_controller = PID(kp, ki, kd, min_throttle, max_throttle)
 
         # LPF for velocity
@@ -57,7 +57,7 @@ class Controller(object):
             # Break if necessary
             if linear_vel == 0. and current_vel < 0.1:
                 throttle = 0.
-                brake = 400.
+                brake = 700.
             elif throttle < 1. and vel_error < 0.:
                 throttle = 0.
                 decel = max(vel_error, self.decel_limit)
