@@ -52,7 +52,7 @@ class WaypointUpdater(object):
         # Spin until shutdown
         rate = rospy.Rate(50) # 50Hz
         while not rospy.is_shutdown():
-            if not None in (self.pose, self.waypoints_tree)
+            if not None in (self.pose, self.waypoints_tree):
                 closest_waypoint_idx = self.get_closest_waypoint_idx()
                 self.publish_waypoints(closest_waypoint_idx)
             rate.sleep()
