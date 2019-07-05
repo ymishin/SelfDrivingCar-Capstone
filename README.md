@@ -7,4 +7,4 @@
 
 ---
 
-**Individual submission : Yury Mishin (yury.mishin@gmail.com)
+**Individual submission : Yury Mishin (yury.mishin@gmail.com)**
