@@ -35,9 +35,9 @@ class TLClassifier(object):
         #red_hue_image = cv2.GaussianBlur(red_hue_image, (9, 9));
 
         # Apply Circle Hough Transform to detect circles
-        circles = cv2.HoughCircles(red_hue_image, cv2.HOUGH_GRADIENT, 1, 30, 100, 20, 5, 50)
+        circles = cv2.HoughCircles(red_hue_image, cv2.HOUGH_GRADIENT, 1, 30, param1=20, param2=10, minRadius=5, maxRadius=50)
 
-        if circles.size > 0:
+        if circles is not None:
             return TrafficLight.RED
         else:
             return TrafficLight.UNKNOWN

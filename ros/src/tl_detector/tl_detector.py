@@ -82,7 +82,7 @@ class TLDetector(object):
         """
         self.has_image = True
         self.camera_image = msg
-        light_wp, state = self.process_traffic_lights_test()
+        light_wp, state = self.process_traffic_lights()
 
         '''
         Publish upcoming red lights at camera frequency.
@@ -116,10 +116,37 @@ class TLDetector(object):
         closest_idx = self.waypoints_tree.query([x, y], 1)[1]
         return closest_idx
 
-    def get_light_state_test(self, light):
-        return light.state
+    def process_traffic_lights(self):
+        """Finds closest visible traffic light, if one exists, and determines its
+            location and color
 
-    def get_light_state(self, light):
+        Returns:
+            int: index of waypoint closes to the upcoming stop line for a traffic light (-1 if none exists)
+            int: ID of traffic light color (specified in styx_msgs/TrafficLight)
+
+        """
+        line_wp_idx = None
+
+        # Find the closest visible traffic light (if one exists)
+        if not None in (self.pose, self.waypoints_tree, self.lights):
+            car_wp_idx = self.get_closest_waypoint(self.pose.pose.position.x, self.pose.pose.position.y)
+            #maxdiff = len(self.base_waypoints.waypoints)
+            maxdiff = 50
+
+            for light_line in self.stop_line_positions:
+                temp_wp_idx = self.get_closest_waypoint(light_line[0], light_line[1])
+                diff = temp_wp_idx - car_wp_idx
+                if diff > 0 and diff < maxdiff:
+                    maxdiff = diff
+                    line_wp_idx = temp_wp_idx
+
+        if line_wp_idx:
+            state = self.get_light_state()
+            return line_wp_idx, state
+
+        return -1, TrafficLight.UNKNOWN
+    
+    def get_light_state(self):
         """Determines the current color of the traffic light
 
         Args:
@@ -129,18 +156,12 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        # For testing
-        return light.state
 
-        # if not self.has_image:
-        #    self.prev_light_loc = None
-        #    return False
-
-        #cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+        cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
         # Get classification
-        #return self.light_classifier.get_classification(cv_image)
-
+        return self.light_classifier.get_classification(cv_image)
+ 
     def process_traffic_lights_test(self):
         """Finds closest visible traffic light, if one exists, and determines its
             location and color
@@ -156,8 +177,8 @@ class TLDetector(object):
         # Find the closest visible traffic light (if one exists)
         if not None in (self.pose, self.waypoints_tree, self.lights):
             car_wp_idx = self.get_closest_waypoint(self.pose.pose.position.x, self.pose.pose.position.y)
-            maxdiff = len(self.base_waypoints.waypoints)
-            #maxdiff = 30
+            #maxdiff = len(self.base_waypoints.waypoints)
+            maxdiff = 50
 
             for i, light in enumerate(self.lights):
                 light_line = self.stop_line_positions[i]
@@ -173,7 +194,10 @@ class TLDetector(object):
             return line_wp_idx, state
 
         return -1, TrafficLight.UNKNOWN
-
+    
+    def get_light_state_test(self, light):
+        return light.state
+    
 if __name__ == '__main__':
     try:
         TLDetector()
